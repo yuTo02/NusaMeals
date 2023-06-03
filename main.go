@@ -1,25 +1,29 @@
 package main
 
 import (
-	"reglog/config"
-	"reglog/lib/seeder"
-	"reglog/middlewares"
-	route "reglog/routes"
-	"reglog/util"
-
 	"github.com/go-playground/validator/v10"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"reglog/internal/common/constant"
+
+	"reglog/internal/common/config"
+	"reglog/internal/common/lib/seeder"
+	"reglog/internal/common/middleware"
+	"reglog/internal/common/util"
+	"reglog/internal/route"
 )
 
 func init() {
-	config.InitDB()
+	config.InitMySQLDev()
 	config.InitialMigration()
 	seeder.DBSeed(config.DB)
 }
 
 func main() {
+	// Setup JWT Secret Key
+	jwtProvider := middleware.NewJWTProvider(constant.JWT_SECRET_KEY)
+
+	// ECHO HTTP SERVER
 	e := echo.New()
 
 	// Middleware
@@ -28,13 +32,17 @@ func main() {
 	e.Use(middleware.CORS())
 
 	// Custom Middleware
-	e.Use(middlewares.CORS())
-
+	e.Use(middleware.CORS())
 	e.Validator = &util.CustomValidator{
 		Validator: validator.New(),
 	}
 
-	// Routes
+	// Get Routes
+	route := route.Config{
+		Echo:        e,
+		DBConn:      config.DB,
+		JwtProvider: jwtProvider,
+	}
 	route.New()
 
 	// Start the server
