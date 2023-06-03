@@ -41,7 +41,7 @@ func (u *userUseCase) RegisterUser(request request.RegisterUser) error {
 	}
 
 	// Check Available Email
-	_, err = u.UserRepo.GetUserByEmail(request.Username)
+	_, err = u.UserRepo.GetUserByEmail(request.Email)
 	if err == nil {
 		return errors.New("email is already Exists")
 	}
@@ -58,7 +58,7 @@ func (u *userUseCase) RegisterUser(request request.RegisterUser) error {
 		Username: request.Username,
 		Email:    request.Email,
 		Password: string(hashPassword),
-		Role:     "user",
+		Role:     request.Role,
 	}
 
 	// Save User via repository

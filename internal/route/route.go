@@ -22,18 +22,30 @@ func (cfg *Config) New() {
 
 	// dependency injection
 	userRepository := repository.NewUserRepository(cfg.DBConn)
+	productRepository := repository.NewProductRepository(cfg.DBConn)
+
 	userUseCase := usecase.NewUserUseCase(userRepository, cfg.JwtProvider)
-	authController := controller.NewAuthController(userUseCase)
-	userController := controller.NewUserController(userUseCase)
+	productUseCase := usecase.NewProductUseCase(productRepository)
 
 	// Routes
 
 	// AUTH
-	cfg.Echo.POST("/register", authController.RegisterController)
+	authController := controller.NewAuthController(userUseCase)
+	cfg.Echo.POST("/register", authController.RegisterUserController)
 	cfg.Echo.POST("/login", authController.LoginController)
+
+	adminController := controller.NewAuthController(userUseCase)
+	cfg.Echo.POST("/admin/register", adminController.RegisterAdminController)
+
 	// USER
-	user := cfg.Echo.Group("users", authMiddleware.IsAuthenticated())
+	userController := controller.NewUserController(userUseCase)
+	user := cfg.Echo.Group("/users", authMiddleware.IsAuthenticated())
 	user.GET("", userController.GetAllUser, authMiddleware.IsAdmin)
-	user.GET("/:id", userController.GetAllUser, authMiddleware.IsUser)
+	user.GET("/:id", userController.GetUserByID, authMiddleware.IsUser)
+
+	// PRODUCT
+	productController := controller.NewProductController(productUseCase)
+	product := cfg.Echo.Group("/products", authMiddleware.IsAuthenticated())
+	product.POST("", productController.CreateProductController, authMiddleware.IsAdmin)
 
 }
