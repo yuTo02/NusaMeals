@@ -22,9 +22,9 @@ func NewProductUseCase(pr repository.ProductRepository) ProductUseCase {
 
 func (p productUseCase) CreateProduct(request request.Product) error {
 	product := model.Product{
-		Name:  request.Name,
-		Stock: request.Stock,
-		Type:  request.Type,
+		Name:     request.Name,
+		Stock:    request.Stock,
+		Category: request.Category,
 	}
 
 	err := p.ProductRepo.CreateProduct(product)

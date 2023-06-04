@@ -1,16 +1,17 @@
 package repository
 
 import (
-	"github.com/jinzhu/gorm"
 	"reglog/internal/model"
+
+	"github.com/jinzhu/gorm"
 )
 
 type ProductRepository interface {
 	CreateProduct(data model.Product) error
-	//GetAllProducts() ([]model.Product, error)
-	//GetProductByID(ID string) (model.Product, error)
-	//GetProductByType(email string) (model.Product, error)
-	//UpdateProduct(ID uint, data model.Product) error
+	GetAllProducts() ([]model.Product, error)
+	GetProductByID(ID string) (model.Product, error)
+	GetProductByCategory(category string) (model.Product, error)
+	UpdateProduct(ID uint, data model.Product) error
 	//DeleteProductByID(ID uint) error
 }
 
@@ -29,4 +30,34 @@ func (r *productRepository) CreateProduct(data model.Product) error {
 	}
 
 	return nil
+}
+
+func (r *productRepository) GetAllProducts() ([]model.Product, error) {
+	var products []model.Product
+
+	if err := r.db.Model(&model.Product{}).Find(&products).Error; err != nil {
+		return products, err
+	}
+
+	return products, nil
+}
+
+func (r *productRepository) GetProductByID(ID string) (model.Product, error) {
+
+	var product model.Product
+	if err := r.db.Model(&product).Where("id = ?", ID).Find(&product).Error; err != nil {
+		return product, err
+	}
+
+	return product, nil
+}
+
+func (r *productRepository) GetProductByCategory(category string) (model.Product, error) {
+
+	var product model.Product
+	if err := r.db.Model(&product).Where("category = ?", category).Find(&product).Error; err != nil {
+		return product, err
+	}
+
+	return product, nil
 }

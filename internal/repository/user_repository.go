@@ -1,8 +1,9 @@
 package repository
 
 import (
-	"github.com/jinzhu/gorm"
 	"reglog/internal/model"
+
+	"github.com/jinzhu/gorm"
 )
 
 type UserRepository interface {
