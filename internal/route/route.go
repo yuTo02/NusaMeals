@@ -42,10 +42,16 @@ func (cfg *Config) New() {
 	userController := controller.NewUserController(userUseCase)
 	user := cfg.Echo.Group("/users", authMiddleware.IsAuthenticated())
 	user.GET("/:id", userController.GetUserByID, authMiddleware.IsUser)
+	user.GET("/:username", userController.GetUserByUsername, authMiddleware.IsUser)
+	user.GET("/:email", userController.GetUserByEmail, authMiddleware.IsUser)
 	user.PUT("/:id", userController.UpdateUser, authMiddleware.IsUser)
 
 	//ADMIN
 	user.GET("", userController.GetAllUser, authMiddleware.IsAdmin)
+	user.GET("/:id", userController.GetUserByID, authMiddleware.IsAdmin)
+	user.GET("/:username", userController.GetUserByUsername, authMiddleware.IsAdmin)
+	user.GET("/:email", userController.GetUserByEmail, authMiddleware.IsAdmin)
+	user.PUT("/:id", userController.UpdateUser, authMiddleware.IsAdmin)
 
 	// PRODUCT
 	productController := controller.NewProductController(productUseCase)

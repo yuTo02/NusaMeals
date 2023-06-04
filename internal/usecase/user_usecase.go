@@ -2,12 +2,13 @@ package usecase
 
 import (
 	"errors"
-	"golang.org/x/crypto/bcrypt"
 	"reglog/internal/common/middleware"
 	"reglog/internal/dto/request"
 	"reglog/internal/dto/response"
 	"reglog/internal/model"
 	"reglog/internal/repository"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserUseCase interface {
@@ -152,10 +153,13 @@ func (u *userUseCase) GetUserByUsername(username string) (response.User, error) 
 	}
 
 	userResponse = response.User{
-		ID:       user.ID,
-		Name:     user.Name,
-		Username: user.Username,
-		Email:    user.Email,
+		ID:          user.ID,
+		Name:        user.Name,
+		Username:    user.Username,
+		Email:       user.Email,
+		Gender:      user.Gender,
+		PhoneNumber: user.PhoneNumber,
+		Picture:     user.Picture,
 	}
 
 	return userResponse, nil
@@ -200,10 +204,13 @@ func (u *userUseCase) UpdateUser(ID uint, request request.UpdateUser) (response.
 
 	// Transfer object request to model User
 	updateUser := model.User{
-		Name:     request.Name,
-		Username: request.Username,
-		Email:    request.Email,
-		Password: string(hashPassword),
+		Name:        request.Name,
+		Username:    request.Username,
+		Email:       request.Email,
+		Password:    string(hashPassword),
+		Gender:      request.Gender,
+		PhoneNumber: request.PhoneNumber,
+		Picture:     request.Picture,
 	}
 
 	err = u.UserRepo.UpdateUser(ID, updateUser)
@@ -214,10 +221,13 @@ func (u *userUseCase) UpdateUser(ID uint, request request.UpdateUser) (response.
 	// Transfer Model User to response User
 
 	userResponse = response.User{
-		ID:       ID,
-		Name:     updateUser.Name,
-		Username: updateUser.Username,
-		Email:    updateUser.Email,
+		ID:          ID,
+		Name:        updateUser.Name,
+		Username:    updateUser.Username,
+		Email:       updateUser.Email,
+		Gender:      updateUser.Gender,
+		PhoneNumber: updateUser.PhoneNumber,
+		Picture:     updateUser.Picture,
 	}
 
 	return userResponse, nil

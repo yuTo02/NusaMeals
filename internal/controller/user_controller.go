@@ -39,6 +39,28 @@ func (h *UserController) GetUserByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
+func (h *UserController) GetUserByUsername(c echo.Context) error {
+	var Username string = c.Param("username")
+
+	user, err := h.UserUseCase.GetUserByUsername(Username)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, user)
+}
+
+func (h *UserController) GetUserByEmail(c echo.Context) error {
+	var Email string = c.Param("email")
+
+	user, err := h.UserUseCase.GetUserByEmail(Email)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, user)
+}
+
 func (h *UserController) UpdateUser(c echo.Context) error {
 	ID := c.Param("id")
 
