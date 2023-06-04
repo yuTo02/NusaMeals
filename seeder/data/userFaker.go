@@ -1,4 +1,4 @@
-package faker
+package data
 
 import (
 	"github.com/jinzhu/gorm"

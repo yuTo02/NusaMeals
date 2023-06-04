@@ -7,7 +7,6 @@ import (
 	"reglog/internal/common/constant"
 
 	"reglog/internal/common/config"
-	"reglog/internal/common/lib/seeder"
 	"reglog/internal/common/middleware"
 	"reglog/internal/common/util"
 	"reglog/internal/route"
@@ -16,7 +15,6 @@ import (
 func init() {
 	config.InitMySQLDev()
 	config.InitialMigration()
-	seeder.DBSeed(config.DB)
 }
 
 func main() {

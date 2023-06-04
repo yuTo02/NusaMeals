@@ -1,8 +1,10 @@
-package seeder
+package main
 
 import (
 	"github.com/jinzhu/gorm"
-	"reglog/internal/common/lib/faker"
+	"github.com/sirupsen/logrus"
+	"reglog/internal/common/config"
+	"reglog/seeder/data"
 )
 
 type Seeder struct {
@@ -11,16 +13,19 @@ type Seeder struct {
 
 func RegisterSeeder(db *gorm.DB) []Seeder {
 	return []Seeder{
-		{Seeder: faker.UserFaker(db)},
+		{Seeder: data.UserFaker(db)},
 	}
 }
 
-func DBSeed(db *gorm.DB) error {
+func main() {
+	config.InitMySQLDev()
+	db := config.DB
 	for _, seeder := range RegisterSeeder(db) {
 		err := db.Debug().Create(seeder.Seeder).Error
 		if err != nil {
-			return err
+			logrus.Fatal("Cannot run seeder")
+		} else {
+			logrus.Info("Success run seeder")
 		}
 	}
-	return nil
 }

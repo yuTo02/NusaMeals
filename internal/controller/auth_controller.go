@@ -17,7 +17,7 @@ func NewAuthController(uc usecase.UserUseCase) *AuthController {
 	}
 }
 
-func (h *AuthController) RegisterController(c echo.Context) error {
+func (h *AuthController) RegisterUserController(c echo.Context) error {
 	var requestRegister request.RegisterUser
 	if err := c.Bind(&requestRegister); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
@@ -25,7 +25,9 @@ func (h *AuthController) RegisterController(c echo.Context) error {
 		})
 	}
 	if err := c.Validate(requestRegister); err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": err.Error(),
+		})
 	}
 
 	//_, e := c.Cookie("JWTCookie")
@@ -38,6 +40,41 @@ func (h *AuthController) RegisterController(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Password not match")
 	}
 
+	requestRegister.Role = "user"
+	err := h.UserUseCase.RegisterUser(requestRegister)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "success to register",
+	})
+}
+
+func (h *AuthController) RegisterAdminController(c echo.Context) error {
+	var requestRegister request.RegisterUser
+	if err := c.Bind(&requestRegister); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": err.Error(),
+		})
+	}
+	if err := c.Validate(requestRegister); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": err.Error(),
+		})
+	}
+
+	//_, e := c.Cookie("JWTCookie")
+	//
+	//if e == nil {
+	//	return echo.NewHTTPError(http.StatusForbidden, "Already logged in")
+	//}
+
+	if requestRegister.Password != requestRegister.RetypePassword {
+		return echo.NewHTTPError(http.StatusBadRequest, "Password not match")
+	}
+
+	requestRegister.Role = "admin"
 	err := h.UserUseCase.RegisterUser(requestRegister)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -56,7 +93,9 @@ func (h *AuthController) LoginController(c echo.Context) error {
 		})
 	}
 	if err := c.Validate(requestLogin); err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": err.Error(),
+		})
 	}
 
 	//if _, err := c.Cookie("JWTCookie"); err == nil {

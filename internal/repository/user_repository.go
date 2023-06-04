@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"errors"
 	"github.com/jinzhu/gorm"
 	"reglog/internal/model"
 )
@@ -45,7 +44,7 @@ func (r *userRepository) GetAllUsers() ([]model.User, error) {
 func (r *userRepository) GetUserByID(ID string) (model.User, error) {
 	var user model.User
 
-	if err := r.db.Find(&user).Where("id = ", ID).Error; err != nil {
+	if err := r.db.Model(&user).Where("id = ?", ID).Find(&user).Error; err != nil {
 		return user, err
 	}
 
@@ -55,10 +54,8 @@ func (r *userRepository) GetUserByID(ID string) (model.User, error) {
 func (r *userRepository) GetUserByUsername(username string) (model.User, error) {
 	var user model.User
 
-	if err := r.db.Find(&user).Where("username = ", username).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return user, errors.New("user not found")
-		}
+	err := r.db.Model(&user).Where("username = ?", username).Find(&user).Error
+	if err != nil {
 		return user, err
 	}
 
@@ -68,10 +65,7 @@ func (r *userRepository) GetUserByUsername(username string) (model.User, error) 
 func (r *userRepository) GetUserByEmail(email string) (model.User, error) {
 	var user model.User
 
-	if err := r.db.Find(&user).Where("email = ", email).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return user, errors.New("user not found")
-		}
+	if err := r.db.Model(&user).Where("email = ?", email).First(&user).Error; err != nil {
 		return user, err
 	}
 
