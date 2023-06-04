@@ -14,7 +14,7 @@ services:
       - DB_USERNAME=yuto
       - DB_PASSWORD=yuni260200
       - DB_PORT=3306
-      - DB_HOST=db-reglog.cenwmkyknvwe.us-east-1.rds.amazonaws.com
+      - DB_HOST=localhost
     networks:
       - api_server
 

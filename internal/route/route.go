@@ -1,12 +1,13 @@
 package route
 
 import (
-	"github.com/jinzhu/gorm"
-	"github.com/labstack/echo/v4"
 	"reglog/internal/common/middleware"
 	"reglog/internal/controller"
 	"reglog/internal/repository"
 	"reglog/internal/usecase"
+
+	"github.com/jinzhu/gorm"
+	"github.com/labstack/echo/v4"
 )
 
 type Config struct {
@@ -22,18 +23,33 @@ func (cfg *Config) New() {
 
 	// dependency injection
 	userRepository := repository.NewUserRepository(cfg.DBConn)
+	productRepository := repository.NewProductRepository(cfg.DBConn)
+
 	userUseCase := usecase.NewUserUseCase(userRepository, cfg.JwtProvider)
-	authController := controller.NewAuthController(userUseCase)
-	userController := controller.NewUserController(userUseCase)
+	productUseCase := usecase.NewProductUseCase(productRepository)
 
 	// Routes
 
 	// AUTH
-	cfg.Echo.POST("/register", authController.RegisterController)
+	authController := controller.NewAuthController(userUseCase)
+	cfg.Echo.POST("/register", authController.RegisterUserController)
 	cfg.Echo.POST("/login", authController.LoginController)
+	//register ADMIN
+	adminController := controller.NewAuthController(userUseCase)
+	cfg.Echo.POST("/admin/register", adminController.RegisterAdminController)
+
 	// USER
-	user := cfg.Echo.Group("users", authMiddleware.IsAuthenticated())
+	userController := controller.NewUserController(userUseCase)
+	user := cfg.Echo.Group("/users", authMiddleware.IsAuthenticated())
+	user.GET("/:id", userController.GetUserByID, authMiddleware.IsUser)
+	user.PUT("/:id", userController.UpdateUser, authMiddleware.IsUser)
+
+	//ADMIN
 	user.GET("", userController.GetAllUser, authMiddleware.IsAdmin)
-	user.GET("/:id", userController.GetAllUser, authMiddleware.IsUser)
+
+	// PRODUCT
+	productController := controller.NewProductController(productUseCase)
+	product := cfg.Echo.Group("/products", authMiddleware.IsAuthenticated())
+	product.POST("", productController.CreateProductController, authMiddleware.IsAdmin)
 
 }
