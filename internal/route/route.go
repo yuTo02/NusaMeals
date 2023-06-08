@@ -24,9 +24,11 @@ func (cfg *Config) New() {
 	// dependency injection
 	userRepository := repository.NewUserRepository(cfg.DBConn)
 	productRepository := repository.NewProductRepository(cfg.DBConn)
+	menuRepository := repository.NewMenuRepository(cfg.DBConn)
 
 	userUseCase := usecase.NewUserUseCase(userRepository, cfg.JwtProvider)
 	productUseCase := usecase.NewProductUseCase(productRepository)
+	menuUseCase := usecase.NewMenuUseCase(menuRepository)
 
 	// Routes
 
@@ -34,6 +36,7 @@ func (cfg *Config) New() {
 	authController := controller.NewAuthController(userUseCase)
 	cfg.Echo.POST("/register", authController.RegisterUserController)
 	cfg.Echo.POST("/login", authController.LoginController)
+	cfg.Echo.POST("/logout", authController.LogoutController)
 	//register ADMIN
 	adminController := controller.NewAuthController(userUseCase)
 	cfg.Echo.POST("/admin/register", adminController.RegisterAdminController)
@@ -47,15 +50,27 @@ func (cfg *Config) New() {
 	user.PUT("/:id", userController.UpdateUser, authMiddleware.IsUser)
 
 	//ADMIN
-	user.GET("", userController.GetAllUser, authMiddleware.IsAdmin)
-	user.GET("/:id", userController.GetUserByID, authMiddleware.IsAdmin)
-	user.GET("/:username", userController.GetUserByUsername, authMiddleware.IsAdmin)
-	user.GET("/:email", userController.GetUserByEmail, authMiddleware.IsAdmin)
-	user.PUT("/:id", userController.UpdateUser, authMiddleware.IsAdmin)
+	admin := cfg.Echo.Group("/admin", authMiddleware.IsAdmin)
+	admin.GET("/users", userController.GetAllUser)
+	admin.GET("/users/:id", userController.GetUserByID)
+	admin.GET("/users/:username", userController.GetUserByUsername)
+	admin.GET("/users/:email", userController.GetUserByEmail)
+	admin.PUT("/users/:id", userController.UpdateUser)
 
 	// PRODUCT
 	productController := controller.NewProductController(productUseCase)
 	product := cfg.Echo.Group("/products", authMiddleware.IsAuthenticated())
 	product.POST("", productController.CreateProductController, authMiddleware.IsAdmin)
+
+	// MENU
+	menuController := controller.NewMenuController(menuUseCase)
+	menu := cfg.Echo.Group("/menus", authMiddleware.IsAuthenticated())
+	menu.POST("", menuController.CreateMenuController, authMiddleware.IsAdmin)
+	menu.GET("/:id", menuController.GetMenuByIDController)
+	menu.GET("", menuController.GetAllMenusController)
+	menu.GET("/:name", menuController.GetMenuByNameController)
+	menu.GET("/:category", menuController.GetMenuByCategoryController)
+	menu.PUT("/:id", menuController.UpdateMenuController, authMiddleware.IsAdmin)
+	menu.DELETE("/:id", menuController.DeleteMenuByIDController, authMiddleware.IsAdmin)
 
 }

@@ -14,7 +14,6 @@ type User struct {
 
 type LoginUser struct {
 	ID       uint   `json:"id" form:"id"`
-	Name     string `json:"name" form:"name"`
 	Username string `json:"username" form:"username"`
 	Token    string `json:"token" from:"token"`
 }
