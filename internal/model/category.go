@@ -1,11 +1,8 @@
 package model
 
-import "time"
+import "github.com/jinzhu/gorm"
 
 type Category struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	Name      string    `json:"name" form:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Menu      []Menu    `json:"menu"`
+	gorm.Model
+	Name string `json:"name" form:"name"`
 }

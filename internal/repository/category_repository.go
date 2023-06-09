@@ -26,7 +26,6 @@ func (r *categoryRepository) CreateCategory(data model.Category) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -36,7 +35,6 @@ func (r *categoryRepository) GetAllCategories() ([]model.Category, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return categories, nil
 }
 
@@ -46,6 +44,5 @@ func (r *categoryRepository) GetCategoryByID(ID uint) (model.Category, error) {
 	if err != nil {
 		return model.Category{}, err
 	}
-
 	return category, nil
 }

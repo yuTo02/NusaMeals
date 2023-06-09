@@ -26,8 +26,8 @@ func InitDB() {
 		DB_Username: "yuto",
 		DB_Password: "yuni260200",
 		DB_Port:     "3306",
-		DB_Host:     "127.0.0.1",
-		DB_Name:     "reglog",
+		DB_Host:     "localhost",
+		DB_Name:     "contoh",
 	}
 
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
@@ -48,7 +48,6 @@ func InitDB() {
 func InitialMigration() {
 	DB.AutoMigrate(
 		&model.User{},
-		&model.Product{},
 		&model.Menu{},
 		&model.Category{},
 	)

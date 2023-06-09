@@ -10,9 +10,10 @@ type MenuUseCase interface {
 	CreateMenu(request request.Menu) error
 	GetMenuByID(ID uint) (model.Menu, error)
 	GetAllMenus() ([]model.Menu, error)
-	GetMenuByName(name string) (model.Menu, error)
-	GetMenuByCategory(category string) ([]model.Menu, error)
-	UpdateMenu(ID uint, request request.Menu) error
+	GetMenusByName(name string) ([]model.Menu, error)
+	GetMenusByCategory(categoryTypeID uint) ([]model.Menu, error)
+	GetMenusByCategoryName(categoryName string) ([]model.Menu, error)
+	UpdateMenu(ID uint, request request.UpdateMenu) error
 	DeleteMenuByID(ID uint) error
 }
 
@@ -26,88 +27,80 @@ func NewMenuUseCase(menuRepo repository.MenuRepository) MenuUseCase {
 	}
 }
 
-func (u *menuUseCase) CreateMenu(request request.Menu) error {
-	menu := model.Menu{
-		Name:         request.Name,
-		Price:        request.Price,
-		CategoryID:   request.CategoryID,
-		CategoryMenu: request.CategoryMenu,
-		Calories:     request.Calories,
-		Description:  request.Description,
-		Ingredient:   request.Ingredient,
-	}
-
-	err := u.MenuRepo.CreateMenu(menu)
+func (uc *menuUseCase) CreateMenu(request request.Menu) error {
+	err := uc.MenuRepo.CreateMenu(&request)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func (u *menuUseCase) GetMenuByID(ID uint) (model.Menu, error) {
-	menu, err := u.MenuRepo.GetMenuByID(ID)
+func (uc *menuUseCase) GetMenuByID(ID uint) (model.Menu, error) {
+	menu, err := uc.MenuRepo.GetMenuByID(ID)
 	if err != nil {
 		return model.Menu{}, err
 	}
-
 	return menu, nil
 }
 
-func (u *menuUseCase) GetAllMenus() ([]model.Menu, error) {
-	menus, err := u.MenuRepo.GetAllMenus()
+func (uc *menuUseCase) GetAllMenus() ([]model.Menu, error) {
+	menus, err := uc.MenuRepo.GetMenus()
 	if err != nil {
 		return nil, err
 	}
-
 	return menus, nil
 }
 
-func (u *menuUseCase) GetMenuByName(name string) (model.Menu, error) {
-	menu, err := u.MenuRepo.GetMenuByName(name)
-	if err != nil {
-		return model.Menu{}, err
-	}
-
-	return menu, nil
-}
-
-func (u *menuUseCase) GetMenuByCategory(category string) ([]model.Menu, error) {
-	menus, err := u.MenuRepo.GetMenuByCategory(category)
+func (uc *menuUseCase) GetMenusByName(name string) ([]model.Menu, error) {
+	menus, err := uc.MenuRepo.GetMenusByName(name)
 	if err != nil {
 		return nil, err
 	}
-
 	return menus, nil
 }
 
-func (u *menuUseCase) UpdateMenu(ID uint, request request.Menu) error {
-	menu, err := u.MenuRepo.GetMenuByID(ID)
+func (uc *menuUseCase) GetMenusByCategory(categoryID uint) ([]model.Menu, error) {
+	menus, err := uc.MenuRepo.GetMenusByCategory(categoryID)
+	if err != nil {
+		return nil, err
+	}
+	return menus, nil
+}
+
+func (uc *menuUseCase) GetMenusByCategoryName(categoryName string) ([]model.Menu, error) {
+	menus, err := uc.MenuRepo.GetMenusByCategoryName(categoryName)
+	if err != nil {
+		return nil, err
+	}
+	return menus, nil
+}
+
+func (uc *menuUseCase) UpdateMenu(ID uint, request request.UpdateMenu) error {
+	menu, err := uc.MenuRepo.GetMenuByID(ID)
 	if err != nil {
 		return err
 	}
 
 	menu.Name = request.Name
 	menu.Price = request.Price
-	menu.CategoryID = request.CategoryID
-	menu.CategoryMenu = request.CategoryMenu
 	menu.Calories = request.Calories
+	menu.City = request.City
 	menu.Description = request.Description
 	menu.Ingredient = request.Ingredient
+	menu.Images = request.Images
+	menu.CategoryID = request.CategoryID
 
-	err = u.MenuRepo.UpdateMenu(ID, menu)
+	err = uc.MenuRepo.UpdateMenu(&menu)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func (u *menuUseCase) DeleteMenuByID(ID uint) error {
-	err := u.MenuRepo.DeleteMenuByID(ID)
+func (uc *menuUseCase) DeleteMenuByID(ID uint) error {
+	err := uc.MenuRepo.DeleteMenuByID(ID)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
