@@ -27,7 +27,7 @@ func InitDB() {
 		DB_Password: "yuni260200",
 		DB_Port:     "3306",
 		DB_Host:     "localhost",
-		DB_Name:     "contoh",
+		DB_Name:     "users",
 	}
 
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",

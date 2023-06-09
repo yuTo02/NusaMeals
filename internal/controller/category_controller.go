@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"reglog/internal/dto/request"
 	"reglog/internal/usecase"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -29,6 +30,35 @@ func (cc *CategoryController) GetCategoryController(c echo.Context) error {
 	})
 }
 
+func (cc *CategoryController) GetMenuByCategoryController(c echo.Context) error {
+	categoryID, err := strconv.ParseUint(c.QueryParam("categoryID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	menus, err := cc.CategoryUseCase.GetMenuByCategory(uint(categoryID))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "success get menus by category",
+		"data":    menus,
+	})
+}
+
+func (cc *CategoryController) GetMenusByCategoryController(c echo.Context) error {
+	categoryName := c.QueryParam("category_name")
+	menus, err := cc.CategoryUseCase.GetCategoryByName(categoryName)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "success get menus by category",
+		"data":    menus,
+	})
+}
+
 func (cc *CategoryController) CreateCategoryController(c echo.Context) error {
 	var req request.CreateCategory
 	if err := c.Bind(&req); err != nil {
@@ -42,5 +72,45 @@ func (cc *CategoryController) CreateCategoryController(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message": "success create category",
+	})
+}
+
+func (cc *CategoryController) UpdateCategoryController(c echo.Context) error {
+	categoryID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	var req request.UpdateCategory
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := c.Validate(req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = cc.CategoryUseCase.UpdateCategory(uint(categoryID), req)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "success update category",
+	})
+}
+
+func (cc *CategoryController) DeleteCategoryController(c echo.Context) error {
+	categoryID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = cc.CategoryUseCase.DeleteCategory(uint(categoryID))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "success delete category",
 	})
 }

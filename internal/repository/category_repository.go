@@ -10,7 +10,10 @@ type CategoryRepository interface {
 	CreateCategory(data model.Category) error
 	GetAllCategories() ([]model.Category, error)
 	GetCategoryByID(ID uint) (model.Category, error)
-	// Implement other operations as needed
+	GetMenuByCategory(categoryID uint) ([]model.Menu, error)
+	GetCategoryByName(name string) (model.Category, error)
+	UpdateCategory(data model.Category) error
+	DeleteCategory(ID uint) error
 }
 
 type categoryRepository struct {
@@ -45,4 +48,38 @@ func (r *categoryRepository) GetCategoryByID(ID uint) (model.Category, error) {
 		return model.Category{}, err
 	}
 	return category, nil
+}
+
+func (r *categoryRepository) GetMenuByCategory(categoryID uint) ([]model.Menu, error) {
+	var menus []model.Menu
+	err := r.db.Where("category_id = ?", categoryID).Find(&menus).Error
+	if err != nil {
+		return nil, err
+	}
+	return menus, nil
+}
+
+func (r *categoryRepository) GetCategoryByName(name string) (model.Category, error) {
+	var category model.Category
+	err := r.db.Preload("Menus").Where("name = ?", name).First(&category).Error
+	if err != nil {
+		return model.Category{}, err
+	}
+	return category, nil
+}
+
+func (r *categoryRepository) UpdateCategory(data model.Category) error {
+	err := r.db.Save(&data).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *categoryRepository) DeleteCategory(ID uint) error {
+	err := r.db.Delete(&model.Category{}, ID).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

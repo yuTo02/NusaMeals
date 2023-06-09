@@ -64,16 +64,20 @@ func (cfg *Config) New() {
 	categoryRoutes := cfg.Echo.Group("/category")
 	categoryRoutes.POST("", categoryController.CreateCategoryController, authMiddleware.IsAdmin)
 	categoryRoutes.GET("", categoryController.GetCategoryController)
+	categoryRoutes.GET("/id", categoryController.GetMenuByCategoryController)
+	categoryRoutes.GET("/menu", categoryController.GetMenusByCategoryController)
+	categoryRoutes.PUT("/:id", categoryController.UpdateCategoryController, authMiddleware.IsAdmin)
+	categoryRoutes.DELETE("/:id", categoryController.DeleteCategoryController, authMiddleware.IsAdmin)
 
 	// MENUS
 	menuController := controller.NewMenuController(menuUseCase)
 	menuRoutes := cfg.Echo.Group("/menus")
-	menuRoutes.GET("", menuController.GetAllMenusController)         //bisa
-	menuRoutes.GET("/:id", menuController.GetMenuController)         //bisa
-	menuRoutes.GET("/name", menuController.GetMenusByNameController) //bisa
-	menuRoutes.GET("/category", menuController.GetMenusByCategoryController)
-	menuRoutes.GET("/category/name", menuController.GetMenusByCategoryNameController)
-	menuRoutes.POST("", menuController.CreateMenuController, authMiddleware.IsAdmin) //bisa
-	menuRoutes.PUT("/:id", menuController.UpdateMenuController, authMiddleware.IsAdmin)
-	menuRoutes.DELETE("/:id", menuController.DeleteMenuController, authMiddleware.IsAdmin)
+	menuRoutes.GET("", menuController.GetAllMenusController)                               //bisa
+	menuRoutes.GET("/:id", menuController.GetMenuController)                               //bisa
+	menuRoutes.GET("/name", menuController.GetMenusByNameController)                       //bisa
+	menuRoutes.GET("/category", menuController.GetMenusByCategoryController)               //masih parsing error :V
+	menuRoutes.GET("/category/name", menuController.GetMenusByCategoryNameController)      //bisa
+	menuRoutes.POST("", menuController.CreateMenuController, authMiddleware.IsAdmin)       //bisa
+	menuRoutes.PUT("/:id", menuController.UpdateMenuController, authMiddleware.IsAdmin)    //bisa
+	menuRoutes.DELETE("/:id", menuController.DeleteMenuController, authMiddleware.IsAdmin) //bisa
 }
