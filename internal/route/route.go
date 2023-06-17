@@ -22,10 +22,16 @@ func (cfg *Config) New() {
 
 	// dependency injection
 	userRepository := repository.NewUserRepository(cfg.DBConn)
-	productRepository := repository.NewProductRepository(cfg.DBConn)
+	menuItemRepository := repository.NewMenuItemRepository(cfg.DBConn)
+	orderItemRepository := repository.NewOrderItemRepository(cfg.DBConn)
+	orderRepository := repository.NewOrderRepository(cfg.DBConn)
+	paymentRepository := repository.NewPaymentRepository(cfg.DBConn)
 
 	userUseCase := usecase.NewUserUseCase(userRepository, cfg.JwtProvider)
-	productUseCase := usecase.NewProductUseCase(productRepository)
+	menuItemUseCase := usecase.NewMenuItemUseCase(menuItemRepository)
+	orderItemUseCase := usecase.NewOrderItemUseCase(orderItemRepository)
+	orderUseCase := usecase.NewOrderUseCase(orderRepository)
+	paymentUseCase := usecase.NewPaymentUseCase(paymentRepository)
 
 	// Routes
 
@@ -33,7 +39,7 @@ func (cfg *Config) New() {
 	authController := controller.NewAuthController(userUseCase)
 	cfg.Echo.POST("/register", authController.RegisterUserController)
 	cfg.Echo.POST("/login", authController.LoginController)
-
+	// AUTH ADMIN
 	adminController := controller.NewAuthController(userUseCase)
 	cfg.Echo.POST("/admin/register", adminController.RegisterAdminController)
 
@@ -43,9 +49,35 @@ func (cfg *Config) New() {
 	user.GET("", userController.GetAllUser, authMiddleware.IsAdmin)
 	user.GET("/:id", userController.GetUserByID, authMiddleware.IsUser)
 
-	// PRODUCT
-	productController := controller.NewProductController(productUseCase)
-	product := cfg.Echo.Group("/products", authMiddleware.IsAuthenticated())
-	product.POST("", productController.CreateProductController, authMiddleware.IsAdmin)
+	// MENU ITEM
+	menuItemController := controller.NewMenuItemController(menuItemUseCase)
+	menu := cfg.Echo.Group("/menu-items", authMiddleware.IsAuthenticated())
+	menu.GET("", menuItemController.GetAllMenuItems)
+	menu.GET("/:id", menuItemController.GetMenuItemByID)
+	menu.POST("/", menuItemController.CreateMenuItem, authMiddleware.IsAdmin)
+	menu.PUT("/:id", menuItemController.UpdateMenuItem, authMiddleware.IsAdmin)
+	menu.DELETE("/:id", menuItemController.DeleteMenuItem, authMiddleware.IsAdmin)
 
+	// ORDER ITEM
+	orderItemController := controller.NewOrderItemController(orderItemUseCase)
+	orderItem := cfg.Echo.Group("/order-items", authMiddleware.IsAuthenticated())
+	orderItem.GET("/:id", orderItemController.GetOrderItemsByOrderID)
+	orderItem.POST("/", orderItemController.AddOrderItem, authMiddleware.IsAdmin)
+	orderItem.PUT("/:id", orderItemController.UpdateOrderItem, authMiddleware.IsAdmin)
+	orderItem.DELETE("/:id", orderItemController.RemoveOrderItem)
+
+	// ORDER
+	orderController := controller.NewOrderController(orderUseCase)
+	order := cfg.Echo.Group("/orders", authMiddleware.IsAuthenticated())
+	order.GET("/:id", orderController.GetOrderByID)
+	order.POST("/", orderController.CreateOrder)
+
+	// PAYMENT
+	paymentController := controller.NewPaymentController(paymentUseCase)
+	payments := cfg.Echo.Group("/payments", authMiddleware.IsAuthenticated())
+	payments.GET("", paymentController.GetAllPayments, authMiddleware.IsAdmin)
+	payments.GET("/:id", paymentController.GetPaymentByID)
+	payments.POST("/", paymentController.CreatePayment)
+	payments.PUT("/:id", paymentController.UpdatePayment)
+	payments.DELETE("/:id", paymentController.DeletePayment, authMiddleware.IsAdmin)
 }
