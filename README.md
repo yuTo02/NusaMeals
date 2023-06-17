@@ -7,7 +7,7 @@ API product
 Create
 Req
 {
-    "name": 
+    "name":
     "stock":
     "type":
 }
@@ -27,14 +27,13 @@ Update :id
     "type":
 }
 
-
 DeleteByID :id -> req
 res
 {
     "message"
 }
 
-GetAll 
+GetAll
 [
     {
         "id"
