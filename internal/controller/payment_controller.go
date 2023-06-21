@@ -1,11 +1,12 @@
 package controller
 
 import (
-	"github.com/labstack/echo/v4"
 	"net/http"
-	"reglog/internal/dtos"
+	"reglog/internal/dto/request"
 	"reglog/internal/usecase"
 	"strconv"
+
+	"github.com/labstack/echo/v4"
 )
 
 type PaymentController struct {
@@ -19,7 +20,7 @@ func NewPaymentController(paymentUseCase usecase.PaymentUseCase) *PaymentControl
 }
 
 func (c *PaymentController) CreatePayment(ctx echo.Context) error {
-	var paymentDTO dtos.PaymentDTO
+	var paymentDTO request.Payment
 	if err := ctx.Bind(&paymentDTO); err != nil {
 		return ctx.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
 	}
@@ -29,7 +30,7 @@ func (c *PaymentController) CreatePayment(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
 
-	return ctx.JSON(http.StatusCreated, createdPayment)
+	return ctx.JSON(http.StatusOK, createdPayment)
 }
 
 func (c *PaymentController) UpdatePayment(ctx echo.Context) error {
@@ -38,7 +39,7 @@ func (c *PaymentController) UpdatePayment(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
 	}
 
-	var paymentDTO dtos.PaymentDTO
+	var paymentDTO request.Payment
 	if err := ctx.Bind(&paymentDTO); err != nil {
 		return ctx.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
 	}
@@ -51,10 +52,29 @@ func (c *PaymentController) UpdatePayment(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, updatedPayment)
 }
 
-func (c *PaymentController) DeletePayment(ctx echo.Context) error {
+func (c *PaymentController) UpdatePaymentByAdmin(ctx echo.Context) error {
 	paymentID, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
+	}
+
+	var paymentUpdateDTO request.PaymentUpdate
+	if err := ctx.Bind(&paymentUpdateDTO); err != nil {
+		return ctx.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
+	}
+
+	updatedPayment, err := c.paymentUseCase.UpdatePaymentByAdmin(uint(paymentID), &paymentUpdateDTO)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
+	}
+
+	return ctx.JSON(http.StatusOK, updatedPayment)
+}
+
+func (c *PaymentController) DeletePayment(ctx echo.Context) error {
+	paymentID, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid payment ID"})
 	}
 
 	err = c.paymentUseCase.DeletePayment(uint(paymentID))
@@ -62,7 +82,7 @@ func (c *PaymentController) DeletePayment(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
 
-	return ctx.NoContent(http.StatusNoContent)
+	return ctx.JSON(http.StatusOK, echo.Map{"message": "Payment deleted successfully"})
 }
 
 func (c *PaymentController) GetPaymentByID(ctx echo.Context) error {

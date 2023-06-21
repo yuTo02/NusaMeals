@@ -1,8 +1,9 @@
 package repository
 
 import (
-	"github.com/jinzhu/gorm"
 	"reglog/internal/model"
+
+	"github.com/jinzhu/gorm"
 )
 
 type OrderRepository interface {
@@ -40,7 +41,9 @@ func (r *orderRepository) UpdateOrder(order *model.Order) (*model.Order, error) 
 }
 
 func (r *orderRepository) DeleteOrder(orderID uint) error {
-	return r.db.Delete(&model.Order{}, orderID).Error
+	order := &model.Order{}
+	order.ID = orderID
+	return r.db.Delete(order).Error
 }
 
 func (r *orderRepository) GetOrderByID(orderID uint) (*model.Order, error) {

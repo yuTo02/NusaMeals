@@ -1,8 +1,10 @@
 package repository
 
 import (
-	"github.com/jinzhu/gorm"
 	"reglog/internal/model"
+	"strings"
+
+	"github.com/jinzhu/gorm"
 )
 
 type UserRepository interface {
@@ -11,6 +13,7 @@ type UserRepository interface {
 	GetUserByID(ID string) (model.User, error)
 	GetUserByUsername(username string) (model.User, error)
 	GetUserByEmail(email string) (model.User, error)
+	GetUserByEmailOrUsername(emailOrUsername string) (model.User, error)
 	UpdateUser(ID uint, data model.User) error
 	DeleteUserByID(ID uint) error
 }
@@ -54,7 +57,7 @@ func (r *userRepository) GetUserByID(ID string) (model.User, error) {
 func (r *userRepository) GetUserByUsername(username string) (model.User, error) {
 	var user model.User
 
-	err := r.db.Model(&user).Where("username = ?", username).Find(&user).Error
+	err := r.db.Model(&user).Where("username = ?", username).First(&user).Error
 	if err != nil {
 		return user, err
 	}
@@ -72,10 +75,29 @@ func (r *userRepository) GetUserByEmail(email string) (model.User, error) {
 	return user, nil
 }
 
+func (r *userRepository) GetUserByEmailOrUsername(emailOrUsername string) (model.User, error) {
+	var user model.User
+
+	// Check if the provided value is an email or username
+	if strings.Contains(emailOrUsername, "@") {
+		// Search by email
+		if err := r.db.Model(&user).Where("email = ?", emailOrUsername).First(&user).Error; err != nil {
+			return user, err
+		}
+	} else {
+		// Search by username
+		if err := r.db.Model(&user).Where("username = ?", emailOrUsername).First(&user).Error; err != nil {
+			return user, err
+		}
+	}
+
+	return user, nil
+}
+
 func (r *userRepository) UpdateUser(ID uint, data model.User) error {
 	var user model.User
 
-	if err := r.db.Model(&user).Where("id = ", ID).Updates(&data).Error; err != nil {
+	if err := r.db.Model(&user).Where("id = ?", ID).Updates(&data).Error; err != nil {
 		return err
 	}
 

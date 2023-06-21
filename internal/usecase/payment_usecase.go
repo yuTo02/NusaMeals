@@ -1,17 +1,20 @@
 package usecase
 
 import (
-	"reglog/internal/dtos"
+	"errors"
+	"reglog/internal/dto/request"
+	"reglog/internal/dto/response"
 	"reglog/internal/model"
 	"reglog/internal/repository"
 )
 
 type PaymentUseCase interface {
-	CreatePayment(paymentDTO *dtos.PaymentDTO) (*dtos.PaymentDTO, error)
-	UpdatePayment(paymentID uint, paymentDTO *dtos.PaymentDTO) (*dtos.PaymentDTO, error)
+	CreatePayment(paymentRequest *request.Payment) (*response.Payment, error)
+	UpdatePayment(paymentID uint, paymentRequest *request.Payment) (*response.Payment, error)
+	UpdatePaymentByAdmin(paymentID uint, paymentRequest *request.PaymentUpdate) (*response.PaymentUpdate, error)
 	DeletePayment(paymentID uint) error
-	GetPaymentByID(paymentID uint) (*dtos.PaymentDTO, error)
-	GetAllPayments() ([]dtos.PaymentDTO, error)
+	GetPaymentByID(paymentID uint) (*response.Payment, error)
+	GetAllPayments() ([]response.Payment, error)
 }
 
 type paymentUseCase struct {
@@ -24,13 +27,14 @@ func NewPaymentUseCase(paymentRepo repository.PaymentRepository) PaymentUseCase 
 	}
 }
 
-func (u *paymentUseCase) CreatePayment(paymentDTO *dtos.PaymentDTO) (*dtos.PaymentDTO, error) {
+func (u *paymentUseCase) CreatePayment(paymentRequest *request.Payment) (*response.Payment, error) {
 	payment := &model.Payment{
-		OrderID:     paymentDTO.OrderID,
-		UserID:      paymentDTO.UserID,
-		Amount:      paymentDTO.Amount,
-		Method:      paymentDTO.Method,
-		PaymentType: paymentDTO.PaymentType,
+		OrderID:     paymentRequest.OrderID,
+		UserID:      paymentRequest.UserID,
+		Amount:      paymentRequest.Amount,
+		Method:      paymentRequest.Method,
+		PaymentType: paymentRequest.PaymentType,
+		Status:      "on progress",
 		// Set other fields accordingly
 	}
 
@@ -39,30 +43,28 @@ func (u *paymentUseCase) CreatePayment(paymentDTO *dtos.PaymentDTO) (*dtos.Payme
 		return nil, err
 	}
 
-	createdPaymentDTO := &dtos.PaymentDTO{
+	createdPaymentResponse := &response.Payment{
 		ID:          createdPayment.ID,
 		OrderID:     createdPayment.OrderID,
 		UserID:      createdPayment.UserID,
 		Amount:      createdPayment.Amount,
+		Status:      createdPayment.Status,
 		Method:      createdPayment.Method,
 		PaymentType: createdPayment.PaymentType,
 		// Set other fields accordingly
 	}
 
-	return createdPaymentDTO, nil
+	return createdPaymentResponse, nil
 }
 
-func (u *paymentUseCase) UpdatePayment(paymentID uint, paymentDTO *dtos.PaymentDTO) (*dtos.PaymentDTO, error) {
+func (u *paymentUseCase) UpdatePayment(paymentID uint, paymentRequest *request.Payment) (*response.Payment, error) {
 	payment, err := u.paymentRepo.GetPaymentByID(paymentID)
 	if err != nil {
 		return nil, err
 	}
 
-	payment.OrderID = paymentDTO.OrderID
-	payment.UserID = paymentDTO.UserID
-	payment.Amount = paymentDTO.Amount
-	payment.Method = paymentDTO.Method
-	payment.PaymentType = paymentDTO.PaymentType
+	payment.Method = paymentRequest.Method
+	payment.PaymentType = paymentRequest.PaymentType
 	// Update other fields accordingly
 
 	updatedPayment, err := u.paymentRepo.UpdatePayment(payment)
@@ -70,61 +72,100 @@ func (u *paymentUseCase) UpdatePayment(paymentID uint, paymentDTO *dtos.PaymentD
 		return nil, err
 	}
 
-	updatedPaymentDTO := &dtos.PaymentDTO{
+	updatedPaymentResponse := &response.Payment{
 		ID:          updatedPayment.ID,
 		OrderID:     updatedPayment.OrderID,
 		UserID:      updatedPayment.UserID,
 		Amount:      updatedPayment.Amount,
+		Status:      updatedPayment.Status,
 		Method:      updatedPayment.Method,
 		PaymentType: updatedPayment.PaymentType,
 		// Set other fields accordingly
 	}
 
-	return updatedPaymentDTO, nil
+	return updatedPaymentResponse, nil
+}
+
+func (u *paymentUseCase) UpdatePaymentByAdmin(paymentID uint, paymentRequest *request.PaymentUpdate) (*response.PaymentUpdate, error) {
+	payment, err := u.paymentRepo.GetPaymentByID(paymentID)
+	if err != nil {
+		return nil, err
+	}
+	payment.Status = paymentRequest.Status
+	// Update other fields accordingly
+
+	updatedPayment, err := u.paymentRepo.UpdatePayment(payment)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedPaymentResponse := &response.PaymentUpdate{
+		ID:          updatedPayment.ID,
+		OrderID:     updatedPayment.OrderID,
+		UserID:      updatedPayment.UserID,
+		Amount:      updatedPayment.Amount,
+		Status:      updatedPayment.Status,
+		Method:      updatedPayment.Method,
+		PaymentType: updatedPayment.PaymentType,
+		// Set other fields accordingly
+	}
+
+	return updatedPaymentResponse, nil
 }
 
 func (u *paymentUseCase) DeletePayment(paymentID uint) error {
+	payment, err := u.paymentRepo.GetPaymentByID(paymentID)
+	if err != nil {
+		return err
+	}
+
+	if payment == nil {
+		return errors.New("payment not found")
+	}
+
 	return u.paymentRepo.DeletePayment(paymentID)
 }
 
-func (u *paymentUseCase) GetPaymentByID(paymentID uint) (*dtos.PaymentDTO, error) {
+func (u *paymentUseCase) GetPaymentByID(paymentID uint) (*response.Payment, error) {
 	payment, err := u.paymentRepo.GetPaymentByID(paymentID)
 	if err != nil {
 		return nil, err
 	}
 
-	paymentDTO := &dtos.PaymentDTO{
+	paymentResponse := &response.Payment{
 		ID:          payment.ID,
 		OrderID:     payment.OrderID,
 		UserID:      payment.UserID,
 		Amount:      payment.Amount,
+		Status:      payment.Status,
 		Method:      payment.Method,
 		PaymentType: payment.PaymentType,
 		// Set other fields accordingly
 	}
 
-	return paymentDTO, nil
+	return paymentResponse, nil
 }
 
-func (u *paymentUseCase) GetAllPayments() ([]dtos.PaymentDTO, error) {
+func (u *paymentUseCase) GetAllPayments() ([]response.Payment, error) {
 	payments, err := u.paymentRepo.GetAllPayments()
 	if err != nil {
 		return nil, err
 	}
 
-	paymentDTOs := make([]dtos.PaymentDTO, len(payments))
+	paymentResponses := make([]response.Payment, len(payments))
 	for i, payment := range payments {
-		paymentDTO := dtos.PaymentDTO{
+		paymentResponse := response.Payment{
 			ID:          payment.ID,
 			OrderID:     payment.OrderID,
 			UserID:      payment.UserID,
 			Amount:      payment.Amount,
+			Status:      payment.Status,
 			Method:      payment.Method,
 			PaymentType: payment.PaymentType,
 			// Set other fields accordingly
 		}
-		paymentDTOs[i] = paymentDTO
+		paymentResponses[i] = paymentResponse
 	}
 
-	return paymentDTOs, nil
+	return paymentResponses, nil
 }

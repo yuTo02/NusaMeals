@@ -2,12 +2,14 @@ package usecase
 
 import (
 	"errors"
-	"golang.org/x/crypto/bcrypt"
 	"reglog/internal/common/middleware"
 	"reglog/internal/dto/request"
 	"reglog/internal/dto/response"
 	"reglog/internal/model"
 	"reglog/internal/repository"
+	"strconv"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserUseCase interface {
@@ -19,6 +21,7 @@ type UserUseCase interface {
 	GetUserByEmail(email string) (response.User, error)
 	UpdateUser(ID uint, data request.UpdateUser) (response.User, error)
 	DeleteUser(ID uint) error
+	LogoutUser(userID uint) error
 }
 
 type userUseCase struct {
@@ -54,7 +57,6 @@ func (u *userUseCase) RegisterUser(request request.RegisterUser) error {
 
 	// Transfer Object Request to Model User
 	newUser := model.User{
-		Name:     request.Name,
 		Username: request.Username,
 		Email:    request.Email,
 		Password: string(hashPassword),
@@ -73,15 +75,15 @@ func (u *userUseCase) RegisterUser(request request.RegisterUser) error {
 func (u *userUseCase) LoginUser(request request.LoginUser) (*response.LoginUser, error) {
 	var loginResponse response.LoginUser
 
-	// Found user
-	user, err := u.UserRepo.GetUserByUsername(request.Username)
+	// Check if the provided value is an email or username
+	user, err := u.UserRepo.GetUserByEmailOrUsername(request.EmailOrUsername)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("user or email not found")
 	}
 	// validation password should match with bcrypt method
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password))
 	if err != nil {
-		return nil, errors.New("wrong pasword")
+		return nil, errors.New("invalid password")
 	}
 
 	// Setup Token
@@ -93,12 +95,33 @@ func (u *userUseCase) LoginUser(request request.LoginUser) (*response.LoginUser,
 	// Transfer model User to object Login Response
 	loginResponse = response.LoginUser{
 		ID:       user.ID,
-		Name:     user.Name,
 		Username: user.Username,
 		Token:    token,
 	}
 
 	return &loginResponse, nil
+}
+
+func (u *userUseCase) LogoutUser(userID uint) error {
+	// Convert userID to string
+	strUserID := strconv.FormatUint(uint64(userID), 10)
+
+	// Get the user by ID
+	userResponse, err := u.UserRepo.GetUserByID(strUserID)
+	if err != nil {
+		return err
+	}
+
+	// Clear the user's token or session information
+	//userResponse.Token = ""
+
+	// Update the user in the repository
+	err = u.UserRepo.UpdateUser(userID, userResponse)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (u *userUseCase) GetAllUser() ([]response.User, error) {
@@ -152,10 +175,13 @@ func (u *userUseCase) GetUserByUsername(username string) (response.User, error) 
 	}
 
 	userResponse = response.User{
-		ID:       user.ID,
-		Name:     user.Name,
-		Username: user.Username,
-		Email:    user.Email,
+		ID:          user.ID,
+		Name:        user.Name,
+		Username:    user.Username,
+		Email:       user.Email,
+		Gender:      user.Gender,
+		PhoneNumber: user.PhoneNumber,
+		Picture:     user.Picture,
 	}
 
 	return userResponse, nil
@@ -200,10 +226,13 @@ func (u *userUseCase) UpdateUser(ID uint, request request.UpdateUser) (response.
 
 	// Transfer object request to model User
 	updateUser := model.User{
-		Name:     request.Name,
-		Username: request.Username,
-		Email:    request.Email,
-		Password: string(hashPassword),
+		Name:        request.Name,
+		Username:    request.Username,
+		Email:       request.Email,
+		Password:    string(hashPassword),
+		Gender:      request.Gender,
+		PhoneNumber: request.PhoneNumber,
+		Picture:     request.Picture,
 	}
 
 	err = u.UserRepo.UpdateUser(ID, updateUser)
@@ -214,10 +243,13 @@ func (u *userUseCase) UpdateUser(ID uint, request request.UpdateUser) (response.
 	// Transfer Model User to response User
 
 	userResponse = response.User{
-		ID:       ID,
-		Name:     updateUser.Name,
-		Username: updateUser.Username,
-		Email:    updateUser.Email,
+		ID:          ID,
+		Name:        updateUser.Name,
+		Username:    updateUser.Username,
+		Email:       updateUser.Email,
+		Gender:      updateUser.Gender,
+		PhoneNumber: updateUser.PhoneNumber,
+		Picture:     updateUser.Picture,
 	}
 
 	return userResponse, nil

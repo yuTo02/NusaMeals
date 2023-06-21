@@ -4,6 +4,6 @@ COPY go.mod ./
 COPY go.sum ./
 RUN go mod download
 COPY . ./
-RUN go build -o /reglog
+RUN go build -o /nusameals
 EXPOSE  80
-CMD ["/reglog"]
+CMD ["/nusameals"]

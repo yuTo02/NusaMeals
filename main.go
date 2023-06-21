@@ -1,21 +1,17 @@
 package main
 
 import (
+	"reglog/internal/common/constant"
+
 	"github.com/go-playground/validator/v10"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/labstack/echo/v4"
-	"reglog/internal/common/constant"
 
 	"reglog/internal/common/config"
 	"reglog/internal/common/middleware"
 	"reglog/internal/common/util"
 	"reglog/internal/route"
 )
-
-func init() {
-	config.InitMySQLDev()
-	config.InitialMigration()
-}
 
 func main() {
 	// Setup JWT Secret Key
@@ -34,6 +30,10 @@ func main() {
 	e.Validator = &util.CustomValidator{
 		Validator: validator.New(),
 	}
+
+	// Initialize database connection
+	config.InitDB()
+	config.InitialMigration()
 
 	// Get Routes
 	route := route.Config{

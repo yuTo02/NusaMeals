@@ -1,10 +1,13 @@
 package controller
 
 import (
-	"github.com/labstack/echo/v4"
 	"net/http"
 	"reglog/internal/dto/request"
 	"reglog/internal/usecase"
+	"strconv"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo/v4"
 )
 
 type AuthController struct {
@@ -47,7 +50,7 @@ func (h *AuthController) RegisterUserController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success to register",
+		"message": "Successfully create your account",
 	})
 }
 
@@ -81,7 +84,7 @@ func (h *AuthController) RegisterAdminController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success to register",
+		"message": "Successfully create your account",
 	})
 }
 
@@ -114,6 +117,46 @@ func (h *AuthController) LoginController(c echo.Context) error {
 	//cookie.CreateJWTCookies(c, token)
 
 	return c.JSON(http.StatusOK, responseLogin)
+}
+func (h *AuthController) LogoutController(c echo.Context) error {
+	// Get the JWT token from the request headers or cookies
+	tokenString := c.Request().Header.Get("Authorization")
+	if tokenString == "" {
+		cookie, err := c.Cookie("JWTCookie")
+		if err == nil {
+			tokenString = cookie.Value
+		}
+	}
+
+	// Parse and validate the JWT token
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Specify the key or secret used to sign the JWT token
+		return []byte("SECRET123"), nil
+	})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid token")
+	}
+
+	// Check if the token is valid
+	if claims, ok := token.Claims.(*jwt.StandardClaims); ok && token.Valid {
+		// Extract user ID from the claims
+		userID, err := strconv.ParseUint(claims.Subject, 10, 64)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse user ID")
+		}
+
+		// Perform logout logic in the user use case
+		err = h.UserUseCase.LogoutUser(uint(userID))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to logout user")
+		}
+
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"message": "Successfully logged out",
+		})
+	}
+
+	return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
 }
 
 //func LogoutController(c echo.Context) error {
