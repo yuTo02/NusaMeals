@@ -27,12 +27,14 @@ func (cfg *Config) New() {
 	menuRepository := repository.NewMenuRepository(cfg.DBConn)
 	paymentRepository := repository.NewPaymentRepository(cfg.DBConn)
 	orderRepository := repository.NewOrderRepository(cfg.DBConn)
+	cartRepository := repository.NewCartRepository(cfg.DBConn)
 
 	userUseCase := usecase.NewUserUseCase(userRepository, cfg.JwtProvider)
 	categoryUseCase := usecase.NewCategoryUseCase(categoryRepository, menuRepository)
 	menuUseCase := usecase.NewMenuUseCase(menuRepository)
 	paymentUseCase := usecase.NewPaymentUseCase(paymentRepository)
 	orderUseCase := usecase.NewOrderUseCase(orderRepository, menuRepository)
+	cartUseCase := usecase.NewCartUseCase(cartRepository, menuRepository)
 
 	// Routes
 
@@ -78,7 +80,7 @@ func (cfg *Config) New() {
 	menuRoutes.GET("", menuController.GetAllMenusController)                               //bisa
 	menuRoutes.GET("/:id", menuController.GetMenuController)                               //bisa
 	menuRoutes.GET("/name", menuController.GetMenusByNameController)                       //bisa
-	menuRoutes.GET("/category", menuController.GetMenusByCategoryController)               //masih parsing error :V
+	menuRoutes.GET("/category", menuController.GetMenusByCategoryController)               //bisa
 	menuRoutes.GET("/category/name", menuController.GetMenusByCategoryNameController)      //bisa
 	menuRoutes.POST("", menuController.CreateMenuController, authMiddleware.IsAdmin)       //bisa
 	menuRoutes.PUT("/:id", menuController.UpdateMenuController, authMiddleware.IsAdmin)    //bisa
@@ -102,5 +104,15 @@ func (cfg *Config) New() {
 	orderRoutes.PUT("/:orderID", orderController.UpdateOrder, authMiddleware.IsAdmin)
 	orderRoutes.DELETE("/:orderID", orderController.DeleteOrder, authMiddleware.IsAdmin)
 	orderRoutes.GET("", orderController.GetAllOrders, authMiddleware.IsAdmin)
+
+	// CART
+	cartController := controller.NewCartController(cartUseCase)
+	cartRoutes := cfg.Echo.Group("/carts", authMiddleware.IsAuthenticated())
+	cartRoutes.GET("/:cartID/total", cartController.GetCartTotal)
+	cartRoutes.POST("/items", cartController.AddItemToCart)
+	cartRoutes.PUT("/items/:cartID", cartController.UpdateCartItemQuantity)
+	cartRoutes.GET("/:cartID/items", cartController.GetCartItems)
+	cartRoutes.DELETE("/items/:cartID", cartController.RemoveItemFromCart)
+	cartRoutes.DELETE("/:cartID", cartController.ClearCart)
 
 }

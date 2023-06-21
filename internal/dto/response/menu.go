@@ -1,16 +1,16 @@
 package response
 
 type GetMenuResponse struct {
-	ID          uint   `json:"id"`
-	Name        string `json:"name"`
-	Price       int    `json:"price"`
-	CategoryID  uint   `json:"category_id"`
-	Category    string `json:"category"`
-	Calories    string `json:"calories"`
-	City        string `json:"city"`
-	Description string `json:"description"`
-	Ingredients string `json:"ingredients"`
-	Images      string `json:"images"`
+	ID          uint    `json:"id"`
+	Name        string  `json:"name"`
+	Price       float64 `json:"price"`
+	Calories    string  `json:"calories"`
+	City        string  `json:"city"`
+	Description string  `json:"description"`
+	Ingredients string  `json:"ingredients"`
+	Images      string  `json:"images"`
+	CategoryID  uint    `json:"category_id"`
+	Category    string  `json:"category"`
 }
 
 type CategoryResponse struct {

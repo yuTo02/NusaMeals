@@ -26,8 +26,8 @@ func InitDB() {
 		DB_Username: "yuto",
 		DB_Password: "yuni260200",
 		DB_Port:     "3306",
-		DB_Host:     "nusameals.cenwmkyknvwe.us-east-1.rds.amazonaws.com",
-		DB_Name:     "nusameals",
+		DB_Host:     "localhost",
+		DB_Name:     "users",
 	}
 
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
@@ -52,6 +52,8 @@ func InitialMigration() {
 		&model.Category{},
 		&model.Payment{},
 		&model.Order{},
+		&model.Cart{},
+		&model.CartItem{},
 	)
 
 }

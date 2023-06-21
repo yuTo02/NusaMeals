@@ -4,6 +4,6 @@ COPY go.mod ./
 COPY go.sum ./
 RUN go mod download
 COPY . ./
-RUN go build -o /nusameals
+RUN go build -o /develop
 EXPOSE  80
-CMD ["/nusameals"]
+CMD ["/develop"]

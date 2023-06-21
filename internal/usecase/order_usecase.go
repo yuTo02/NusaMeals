@@ -33,7 +33,7 @@ func (c *orderUseCase) CreateOrder(orderDTO *request.Order) (*response.Order, er
 		return nil, err
 	}
 
-	quantity := int(orderDTO.Quantity)
+	quantity := float64(orderDTO.Quantity)
 	totalPrice := menu.Price * quantity
 
 	order := &model.Order{
